@@ -1,19 +1,19 @@
-FROM node:20-alpine AS backend
+FROM node:20-alpine
+
+# Install nginx
+RUN apk add --no-cache nginx
+
+# Setup backend
 WORKDIR /app
 COPY backend/package.json ./
 RUN npm install --production
 COPY backend/server.js ./
 
-FROM nginx:alpine
-# Install Node.js runtime
-RUN apk add --no-cache nodejs
-
-# Copy backend
-COPY --from=backend /app /app
-
-# Copy frontend
+# Setup frontend
 COPY index.html /usr/share/nginx/html/index.html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Alpine nginx uses http.d/ not conf.d/
+RUN rm -f /etc/nginx/http.d/default.conf
+COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Create data dir for SQLite
 RUN mkdir -p /data
