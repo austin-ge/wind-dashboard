@@ -3,8 +3,6 @@ const Database = require('better-sqlite3');
 const path = require('path');
 
 const DB_PATH = process.env.DB_PATH || '/data/weather.db';
-const PI3_HOST = process.env.PI3_HOST || '100.118.177.49';
-const PI3_PORT = process.env.PI3_PORT || '4000';
 const POLL_INTERVAL = 5000; // 5 seconds
 const WINDOW_MINUTES = 30;
 const PORT = 3000;
@@ -37,7 +35,7 @@ setInterval(cleanOldReadings, 60 * 60 * 1000); // every hour
 
 function fetchWeather() {
   return new Promise((resolve, reject) => {
-    const req = http.get(`http://${PI3_HOST}:${PI3_PORT}/api/weather`, { timeout: 5000 }, (res) => {
+    const req = http.get('http://127.0.0.1:80/api/weather', { timeout: 5000 }, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
