@@ -9,15 +9,5 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.wind-dashboard.rule=Host(`skydivemidwestwx.com`) || Host(`www.skydivemidwestwx.com`)"
-      - "traefik.http.routers.wind-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.wind-dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.services.wind-dashboard.loadbalancer.server.port=80"
-    networks:
-      - dokploy-network
-
-networks:
-  dokploy-network:
-    external: true
+    ports:
+      - "80"
