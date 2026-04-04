@@ -9,8 +9,8 @@ services:
       - "traefik.http.routers.wind-dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.services.wind-dashboard.loadbalancer.server.port=80"
     networks:
-      - proxy
+      - dokploy-network
 
 networks:
-  proxy:
+  dokploy-network:
     external: true
