@@ -4,8 +4,13 @@ services:
     restart: unless-stopped
     ports:
       - "80"
+    volumes:
+      - wind-data:/data
     networks:
       - dokploy-network
+
+volumes:
+  wind-data:
 
 networks:
   dokploy-network:
