@@ -2,6 +2,11 @@ services:
   web:
     build: .
     restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wind-dashboard.rule=Host(`skydivemidwestwx.com`) || Host(`www.skydivemidwestwx.com`)"
