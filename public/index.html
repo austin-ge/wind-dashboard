@@ -394,6 +394,41 @@
       border-radius: 12px;
     }
 
+    /* --- Last Window --- */
+
+    .last-window {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(94, 234, 212, 0.04);
+      border: 1px solid rgba(94, 234, 212, 0.1);
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: none;
+    }
+
+    .last-window.visible { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+
+    .last-window-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      width: 100%;
+      margin-bottom: 2px;
+    }
+
+    .last-window-val {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .last-window-val.avg { color: var(--avg); }
+    .last-window-val.gust { color: var(--gust); }
+    .last-window-time { color: var(--dim); }
+
     /* --- Table --- */
 
     .table-card .card-inner { padding-bottom: 12px; }
@@ -585,6 +620,7 @@
                   <strong id="pressureValue">&mdash;</strong>
                 </div>
               </div>
+              <div class="last-window" id="lastWindow"></div>
             </div>
           </div>
         </div>
@@ -656,6 +692,7 @@
       windChart: document.getElementById('windChart'),
       tableContainer: document.getElementById('tableContainer'),
       windowCount: document.getElementById('windowCount'),
+      lastWindow: document.getElementById('lastWindow'),
     };
 
     const fmtInt = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
@@ -880,6 +917,23 @@
       el.windowCount.textContent = windows.length
         ? `${windows.length} windows`
         : (state.windowsError ? 'Data unavailable' : 'No data yet');
+
+      // Show last completed window in live card
+      const now = Date.now();
+      const lastCompleted = windows.find(w => new Date(w.window_end).getTime() <= now);
+      if (lastCompleted) {
+        const avg = Math.round(Number(lastCompleted.avg_windspeed_mph));
+        const gust = Math.round(Number(lastCompleted.max_gust_mph));
+        const timeRange = formatTimeRange(lastCompleted.window_start, lastCompleted.window_end);
+        el.lastWindow.innerHTML = `
+          <div class="last-window-label">Last 30-Min Window</div>
+          <span class="last-window-val avg">${avg} mph avg</span>
+          <span class="last-window-val gust">${gust} mph gust</span>
+          <span class="last-window-time">${timeRange}</span>`;
+        el.lastWindow.classList.add('visible');
+      } else {
+        el.lastWindow.classList.remove('visible');
+      }
 
       if (!windows.length) {
         el.tableContainer.innerHTML = '<div class="table-empty">Waiting for data\u2026</div>';
