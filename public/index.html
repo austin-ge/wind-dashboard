@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="color-scheme: dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dropzone Wind Board</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -100,6 +102,7 @@
       line-height: 0.9;
       font-weight: 800;
       letter-spacing: -0.06em;
+      font-variant-numeric: tabular-nums;
     }
 
     .live-unit {
@@ -268,7 +271,7 @@
       flex-wrap: wrap;
     }
 
-    .title-row h1 {
+    .title-row h2 {
       margin: 0;
       font-size: clamp(1.2rem, 2vw, 1.7rem);
       letter-spacing: -0.03em;
@@ -284,6 +287,11 @@
       .chart-wrap { height: 260px; }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .arrow-wrap { transition: none; }
+      tbody tr { transition: none; }
+    }
+
     @media (max-width: 640px) {
       .dashboard { padding: 14px; gap: 14px; }
       .card-inner { padding: 18px; }
@@ -297,7 +305,9 @@
   </style>
 </head>
 <body>
+  <a href="#liveSpeed" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Skip to content</a>
   <main class="dashboard">
+    <h1 class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Dropzone Wind Board</h1>
     <section class="top-grid">
       <article class="card live-card">
         <div class="card-inner">
@@ -330,7 +340,7 @@
             </div>
 
             <div>
-              <div class="dir-label" id="dirLabel">Waiting for data...</div>
+              <div class="dir-label" id="dirLabel">Waiting for data&hellip;</div>
               <div class="meta-row">
                 <div class="meta-chip">
                   Gust
@@ -366,12 +376,12 @@
               <div class="section-label" style="margin-bottom: 8px;">
                 <span>Today's Wind Trend</span>
               </div>
-              <h1>Avg Wind vs Gust</h1>
+              <h2>Avg Wind vs Gust</h2>
             </div>
-            <div class="title-note" id="chartRange">Waiting for window data...</div>
+            <div class="title-note" id="chartRange">Waiting for window data&hellip;</div>
           </div>
           <div id="chartState" class="chart-wrap">
-            <canvas id="windChart"></canvas>
+            <canvas id="windChart" role="img" aria-label="Wind trend chart showing average wind speed and gusts over time"></canvas>
           </div>
         </div>
       </article>
@@ -384,7 +394,7 @@
             <div class="section-label" style="margin-bottom: 8px;">
               <span>30-Minute Windows</span>
             </div>
-            <h1 style="margin:0;">Operational Wind Board</h1>
+            <h2>Operational Wind Board</h2>
           </div>
           <div class="title-note" id="windowCount">No window data yet</div>
         </div>
@@ -517,7 +527,7 @@
       el.densityAltValue.textContent = densityAlt == null ? '—' : `${densityAlt.toLocaleString()} ft`;
       el.cloudBaseValue.textContent = cloudBase == null ? '—' : `${cloudBase.toLocaleString()} ft AGL`;
       el.pressureValue.textContent = pressure == null ? '—' : `${pressure} inHg`;
-      el.dirLabel.textContent = weather ? formatDir(windDir) : (state.weatherError ? 'Live data unavailable' : 'Waiting for data...');
+      el.dirLabel.textContent = weather ? formatDir(windDir) : (state.weatherError ? 'Live data unavailable' : 'Waiting for data\u2026');
       el.windArrow.style.transform = `rotate(${windDir ?? 0}deg)`;
       el.updatedAgo.textContent = timeSince(weather?.received_at || state.lastWeatherFetch);
     }
@@ -532,8 +542,8 @@
           state.chart.destroy();
           state.chart = null;
         }
-        el.chartState.innerHTML = '<div class="chart-empty">Waiting for data...</div>';
-        el.chartRange.textContent = state.windowsError ? 'Window data unavailable' : 'Waiting for window data...';
+        el.chartState.innerHTML = '<div class="chart-empty">Waiting for data\u2026</div>';
+        el.chartRange.textContent = state.windowsError ? 'Window data unavailable' : 'Waiting for window data\u2026';
         return;
       }
 
@@ -633,7 +643,7 @@
         : (state.windowsError ? 'Window data unavailable' : 'No window data yet');
 
       if (!windows.length) {
-        el.tableContainer.innerHTML = '<div class="table-empty">Waiting for data...</div>';
+        el.tableContainer.innerHTML = '<div class="table-empty">Waiting for data\u2026</div>';
         return;
       }
 
