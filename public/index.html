@@ -345,6 +345,10 @@
                   <strong id="densityAltValue">—</strong>
                 </div>
                 <div class="meta-chip">
+                  Cloud Base
+                  <strong id="cloudBaseValue">—</strong>
+                </div>
+                <div class="meta-chip">
                   Pressure
                   <strong id="pressureValue">—</strong>
                 </div>
@@ -413,6 +417,7 @@
       gustValue: document.getElementById('gustValue'),
       tempValue: document.getElementById('tempValue'),
       densityAltValue: document.getElementById('densityAltValue'),
+      cloudBaseValue: document.getElementById('cloudBaseValue'),
       pressureValue: document.getElementById('pressureValue'),
       updatedAgo: document.getElementById('updatedAgo'),
       chartRange: document.getElementById('chartRange'),
@@ -503,12 +508,14 @@
       const windDir = safeDeg(weather?.winddir);
       const temp = fmtInt(weather?.tempf);
       const densityAlt = fmtInt(weather?.density_altitude_ft);
+      const cloudBase = fmtInt(weather?.cloud_base_agl_ft);
       const pressure = fmtOne(weather?.baromabsin);
 
       el.liveSpeed.textContent = speed == null ? '—' : `${speed}`;
       el.gustValue.textContent = gust == null ? '—' : `${gust} mph`;
       el.tempValue.textContent = temp == null ? '—' : `${temp}°F`;
       el.densityAltValue.textContent = densityAlt == null ? '—' : `${densityAlt.toLocaleString()} ft`;
+      el.cloudBaseValue.textContent = cloudBase == null ? '—' : `${cloudBase.toLocaleString()} ft AGL`;
       el.pressureValue.textContent = pressure == null ? '—' : `${pressure} inHg`;
       el.dirLabel.textContent = weather ? formatDir(windDir) : (state.weatherError ? 'Live data unavailable' : 'Waiting for data...');
       el.windArrow.style.transform = `rotate(${windDir ?? 0}deg)`;

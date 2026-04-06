@@ -157,6 +157,18 @@ function computeDensityAltitude(stationPressureInHg, tempF, humidityPct) {
   return Math.round(pressureAlt + (120 * (tempC - standardTempC)) + humidityCorrection);
 }
 
+function computeCloudBase(tempF, humidityPct) {
+  const tempC = (tempF - 32) * 5 / 9;
+  // Magnus formula for dewpoint
+  const a = 17.27, b = 237.7;
+  const alpha = (a * tempC) / (b + tempC) + Math.log(humidityPct / 100);
+  const dewpointC = (b * alpha) / (a - alpha);
+  const spreadF = (tempC - dewpointC) * 9 / 5;
+  // Cloud base AGL = spread × 400, then add field elevation for MSL
+  const cloudBaseAgl = Math.round(spreadF * 400);
+  return { cloudBaseAgl, cloudBaseMsl: cloudBaseAgl + FIELD_ELEVATION_FT };
+}
+
 function enrichWeather(w) {
   const pressure = parseFloat(w.baromabsin);
   const temp = parseFloat(w.tempf);
@@ -164,6 +176,9 @@ function enrichWeather(w) {
   const enriched = { ...w };
   if (Number.isFinite(pressure) && Number.isFinite(temp) && Number.isFinite(humidity)) {
     enriched.density_altitude_ft = computeDensityAltitude(pressure, temp, humidity);
+    const clouds = computeCloudBase(temp, humidity);
+    enriched.cloud_base_agl_ft = clouds.cloudBaseAgl;
+    enriched.cloud_base_msl_ft = clouds.cloudBaseMsl;
   }
   return enriched;
 }
