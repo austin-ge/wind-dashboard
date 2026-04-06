@@ -145,7 +145,7 @@ function averageAngle(degrees) {
 
 // --- Static file serving ---
 
-const STATIC_DIR = path.join(__dirname, '..', 'public');
+const STATIC_DIR = path.join(__dirname, 'public');
 
 const MIME_TYPES = {
   '.html': 'text/html',

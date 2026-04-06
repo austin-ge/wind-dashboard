@@ -5,7 +5,7 @@ COPY backend/package.json ./
 RUN npm install --production
 COPY backend/server.js ./
 
-COPY index.html public/index.html
+COPY public/ public/
 
 RUN mkdir -p /data
 
