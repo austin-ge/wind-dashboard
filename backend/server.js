@@ -8,6 +8,7 @@ const WEATHER_SOURCE = process.env.WEATHER_SOURCE || 'http://100.118.177.49:4000
 const POLL_INTERVAL = 5000;
 const WINDOW_MINUTES = 30;
 const PORT = 3000;
+const FIELD_ELEVATION_FT = 788;
 
 // --- Database setup ---
 
@@ -143,6 +144,30 @@ function averageAngle(degrees) {
   return ((avg % 360) + 360) % 360;
 }
 
+// --- Density altitude ---
+
+function computeDensityAltitude(stationPressureInHg, tempF, humidityPct) {
+  const pressureAlt = (29.92 - stationPressureInHg) * 1000 + FIELD_ELEVATION_FT;
+  const tempC = (tempF - 32) * 5 / 9;
+  const standardTempC = 15 - (pressureAlt * 0.001981);
+  // Humidity correction via vapor pressure
+  const satVaporPressure = 6.1078 * Math.pow(10, (7.5 * tempC) / (237.3 + tempC));
+  const vaporPressure = (humidityPct / 100) * satVaporPressure;
+  const humidityCorrection = vaporPressure * 0.1296;
+  return Math.round(pressureAlt + (120 * (tempC - standardTempC)) + humidityCorrection);
+}
+
+function enrichWeather(w) {
+  const pressure = parseFloat(w.baromabsin);
+  const temp = parseFloat(w.tempf);
+  const humidity = parseFloat(w.humidity);
+  const enriched = { ...w };
+  if (Number.isFinite(pressure) && Number.isFinite(temp) && Number.isFinite(humidity)) {
+    enriched.density_altitude_ft = computeDensityAltitude(pressure, temp, humidity);
+  }
+  return enriched;
+}
+
 // --- Static file serving ---
 
 const STATIC_DIR = path.join(__dirname, 'public');
@@ -189,7 +214,7 @@ const server = http.createServer((req, res) => {
     res.setHeader('Content-Type', 'application/json');
     if (latestWeather) {
       res.writeHead(200);
-      res.end(JSON.stringify(latestWeather));
+      res.end(JSON.stringify(enrichWeather(latestWeather)));
     } else {
       res.writeHead(503);
       res.end(JSON.stringify({ error: 'No data yet' }));

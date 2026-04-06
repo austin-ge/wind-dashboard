@@ -337,12 +337,16 @@
                   <strong id="gustValue">—</strong>
                 </div>
                 <div class="meta-chip">
-                  10m Avg Dir
-                  <strong id="avgDirValue">—</strong>
-                </div>
-                <div class="meta-chip">
                   Temp
                   <strong id="tempValue">—</strong>
+                </div>
+                <div class="meta-chip">
+                  Density Alt
+                  <strong id="densityAltValue">—</strong>
+                </div>
+                <div class="meta-chip">
+                  Pressure
+                  <strong id="pressureValue">—</strong>
                 </div>
               </div>
               <div class="subtle" id="updatedAgo">Last updated —</div>
@@ -407,8 +411,9 @@
       windArrow: document.getElementById('windArrow'),
       dirLabel: document.getElementById('dirLabel'),
       gustValue: document.getElementById('gustValue'),
-      avgDirValue: document.getElementById('avgDirValue'),
       tempValue: document.getElementById('tempValue'),
+      densityAltValue: document.getElementById('densityAltValue'),
+      pressureValue: document.getElementById('pressureValue'),
       updatedAgo: document.getElementById('updatedAgo'),
       chartRange: document.getElementById('chartRange'),
       chartState: document.getElementById('chartState'),
@@ -496,13 +501,15 @@
       const speed = fmtInt(weather?.windspeedmph);
       const gust = fmtInt(weather?.windgustmph);
       const windDir = safeDeg(weather?.winddir);
-      const avgDir = safeDeg(weather?.winddir_avg10m);
       const temp = fmtInt(weather?.tempf);
+      const densityAlt = fmtInt(weather?.density_altitude_ft);
+      const pressure = fmtOne(weather?.baromabsin);
 
       el.liveSpeed.textContent = speed == null ? '—' : `${speed}`;
       el.gustValue.textContent = gust == null ? '—' : `${gust} mph`;
-      el.avgDirValue.textContent = avgDir == null ? '—' : `${Math.round(avgDir)}°`;
       el.tempValue.textContent = temp == null ? '—' : `${temp}°F`;
+      el.densityAltValue.textContent = densityAlt == null ? '—' : `${densityAlt.toLocaleString()} ft`;
+      el.pressureValue.textContent = pressure == null ? '—' : `${pressure} inHg`;
       el.dirLabel.textContent = weather ? formatDir(windDir) : (state.weatherError ? 'Live data unavailable' : 'Waiting for data...');
       el.windArrow.style.transform = `rotate(${windDir ?? 0}deg)`;
       el.updatedAgo.textContent = timeSince(weather?.received_at || state.lastWeatherFetch);
