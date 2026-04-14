@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
@@ -6,6 +7,8 @@ const Database = require('better-sqlite3');
 const DB_PATH = process.env.DB_PATH || '/data/weather.db';
 const WEATHER_SOURCE = process.env.WEATHER_SOURCE || 'http://100.118.177.49:4000/api/weather';
 const POLL_INTERVAL = 5000;
+const SPOT_POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes (spot API caches 15 min server-side)
+const SPOT_SOURCE = process.env.SPOT_SOURCE || 'https://spotboard.xyz/api/spot/skydive-midwest';
 const WINDOW_MINUTES = 30;
 const PORT = 3000;
 const FIELD_ELEVATION_FT = 788;
@@ -81,6 +84,39 @@ async function poll() {
 
 setInterval(poll, POLL_INTERVAL);
 poll();
+
+// --- Spot polling ---
+
+let latestSpot = null;
+
+function fetchSpot() {
+  return new Promise((resolve, reject) => {
+    const req = https.get(SPOT_SOURCE, { timeout: 10000 }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('spot timeout')); });
+  });
+}
+
+async function pollSpot() {
+  try {
+    latestSpot = await fetchSpot();
+  } catch (err) {
+    console.error('Spot poll failed:', err.message);
+  }
+}
+
+setInterval(pollSpot, SPOT_POLL_INTERVAL);
+pollSpot();
 
 // --- Compute 30-minute windows ---
 
@@ -252,6 +288,18 @@ const server = http.createServer((req, res) => {
     } else {
       res.writeHead(503);
       res.end(JSON.stringify({ error: 'No data yet' }));
+    }
+    return;
+  }
+
+  if (req.url === '/api/spot') {
+    res.setHeader('Content-Type', 'application/json');
+    if (latestSpot) {
+      res.writeHead(200);
+      res.end(JSON.stringify(latestSpot));
+    } else {
+      res.writeHead(503);
+      res.end(JSON.stringify({ error: 'No spot data yet' }));
     }
     return;
   }

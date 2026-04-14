@@ -396,6 +396,30 @@
 
     /* --- Last Window --- */
 
+    /* --- Spot --- */
+
+    .spot-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .spot-row.hidden { display: none; }
+
+    .spot-label {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 2px;
+    }
+
     .last-window {
       margin-top: 14px;
       padding: 10px 14px;
@@ -620,6 +644,25 @@
                   <strong id="pressureValue">&mdash;</strong>
                 </div>
               </div>
+              <div class="spot-row hidden" id="spotRow">
+                <div class="spot-label">Out Spot</div>
+                <div class="meta-chip">
+                  Heading
+                  <strong id="spotHeading">&mdash;</strong>
+                </div>
+                <div class="meta-chip">
+                  Offset
+                  <strong id="spotOffset">&mdash;</strong>
+                </div>
+                <div class="meta-chip">
+                  Ground Spd
+                  <strong id="spotGroundSpeed">&mdash;</strong>
+                </div>
+                <div class="meta-chip">
+                  Separation
+                  <strong id="spotSeparation">&mdash;</strong>
+                </div>
+              </div>
               <div class="last-window" id="lastWindow"></div>
             </div>
           </div>
@@ -671,6 +714,7 @@
     const state = {
       weather: null,
       windows: [],
+      spot: null,
       chart: null,
       lastWeatherFetch: null,
       weatherError: false,
@@ -693,6 +737,11 @@
       tableContainer: document.getElementById('tableContainer'),
       windowCount: document.getElementById('windowCount'),
       lastWindow: document.getElementById('lastWindow'),
+      spotRow: document.getElementById('spotRow'),
+      spotHeading: document.getElementById('spotHeading'),
+      spotOffset: document.getElementById('spotOffset'),
+      spotGroundSpeed: document.getElementById('spotGroundSpeed'),
+      spotSeparation: document.getElementById('spotSeparation'),
     };
 
     const fmtInt = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
@@ -767,6 +816,32 @@
       }
       renderWindows();
       renderChart();
+    }
+
+    async function refreshSpot() {
+      try {
+        const data = await fetchJson(`${API_BASE}/api/spot`);
+        if (data && data.spot) {
+          state.spot = data;
+        }
+      } catch (error) {
+        // Spot data is optional — fail silently
+      }
+      renderSpot();
+    }
+
+    function renderSpot() {
+      const spot = state.spot?.spot;
+      if (!spot) {
+        el.spotRow.classList.add('hidden');
+        return;
+      }
+      el.spotRow.classList.remove('hidden');
+      const heading = spot.headingDeg;
+      el.spotHeading.textContent = heading != null ? `${cardinal(heading)} ${Math.round(heading)}\u00B0` : '\u2014';
+      el.spotOffset.textContent = spot.offsetMiles != null ? `${spot.offsetMiles.toFixed(2)} mi` : '\u2014';
+      el.spotGroundSpeed.textContent = spot.groundSpeedKts != null ? `${Math.round(spot.groundSpeedKts)} kts` : '\u2014';
+      el.spotSeparation.textContent = spot.separationSeconds != null ? `${spot.separationSeconds}s` : '\u2014';
     }
 
     function renderWeather() {
@@ -988,9 +1063,10 @@
     async function init() {
       renderWeather();
       renderWindows();
-      await Promise.all([refreshWeather(), refreshWindows()]);
+      await Promise.all([refreshWeather(), refreshWindows(), refreshSpot()]);
       setInterval(refreshWeather, 5000);
       setInterval(refreshWindows, 30000);
+      setInterval(refreshSpot, 5 * 60 * 1000); // 5 minutes
       startUpdatedTicker();
     }
 
