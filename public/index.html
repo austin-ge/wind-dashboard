@@ -372,11 +372,22 @@
 
     /* --- Chart --- */
 
-    .chart-card { min-height: 360px; }
+    .chart-card {
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-card .card-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
 
     .chart-wrap {
       position: relative;
-      height: 290px;
+      flex: 1;
+      min-height: 200px;
       margin-top: 8px;
     }
 
