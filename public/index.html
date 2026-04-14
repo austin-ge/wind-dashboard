@@ -176,6 +176,18 @@
       text-transform: uppercase;
     }
 
+    .badge.stale {
+      border-color: rgba(251, 191, 36, 0.25);
+      background: rgba(251, 191, 36, 0.08);
+      color: var(--gust);
+    }
+
+    .badge.stale::before {
+      background: var(--gust);
+      animation: none;
+      opacity: 0.5;
+    }
+
     .badge::before {
       content: "";
       width: 5px;
@@ -213,6 +225,11 @@
       letter-spacing: -0.05em;
       color: var(--text-bright);
       font-variant-numeric: tabular-nums;
+      transition: text-shadow 0.3s ease;
+    }
+
+    .live-speed.flash {
+      text-shadow: 0 0 20px rgba(94, 234, 212, 0.4);
     }
 
     .live-unit {
@@ -600,7 +617,7 @@
         <div class="card-inner">
           <div class="section-label">
             <span>Live Wind</span>
-            <span class="badge">Live</span>
+            <span class="badge" id="liveBadge">Live</span>
           </div>
 
           <div class="live-speed-wrap">
@@ -740,6 +757,7 @@
       tableContainer: document.getElementById('tableContainer'),
       windowCount: document.getElementById('windowCount'),
       lastWindow: document.getElementById('lastWindow'),
+      liveBadge: document.getElementById('liveBadge'),
       spotRow: document.getElementById('spotRow'),
       spotHeading: document.getElementById('spotHeading'),
       spotRun: document.getElementById('spotRun'),
@@ -859,6 +877,50 @@
       }
     }
 
+    let _animFrame = null;
+    let _displayedSpeed = null;
+
+    function animateSpeed(target) {
+      if (_animFrame) cancelAnimationFrame(_animFrame);
+      const from = _displayedSpeed;
+      if (from === target) return;
+
+      // First value or non-numeric — just set it
+      if (from == null || target == null) {
+        _displayedSpeed = target;
+        el.liveSpeed.textContent = target == null ? '\u2014' : `${target}`;
+        return;
+      }
+
+      const duration = 400;
+      const start = performance.now();
+      el.liveSpeed.classList.add('flash');
+
+      function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+        const current = Math.round(from + (target - from) * ease);
+        el.liveSpeed.textContent = `${current}`;
+        if (t < 1) {
+          _animFrame = requestAnimationFrame(step);
+        } else {
+          _displayedSpeed = target;
+          el.liveSpeed.classList.remove('flash');
+        }
+      }
+      _animFrame = requestAnimationFrame(step);
+    }
+
+    const STALE_THRESHOLD = 30000; // 30 seconds
+
+    function updateStaleness() {
+      const lastUpdate = state.weather?.received_at || state.lastWeatherFetch;
+      const isStale = !lastUpdate || (Date.now() - new Date(lastUpdate).getTime()) > STALE_THRESHOLD;
+      el.liveBadge.classList.toggle('stale', isStale);
+      el.liveBadge.textContent = isStale ? 'Stale' : 'Live';
+      el.updatedAgo.textContent = timeSince(lastUpdate);
+    }
+
     function renderWeather() {
       const weather = state.weather;
       const speed = fmtInt(weather?.windspeedmph);
@@ -869,7 +931,7 @@
       const cloudBase = fmtInt(weather?.cloud_base_agl_ft);
       const pressure = fmtOne(weather?.baromabsin);
 
-      el.liveSpeed.textContent = speed == null ? '\u2014' : `${speed}`;
+      animateSpeed(speed);
       el.gustValue.textContent = gust == null ? '\u2014' : `${gust} mph`;
       el.tempValue.textContent = temp == null ? '\u2014' : `${temp}\u00B0F`;
       el.densityAltValue.textContent = densityAlt == null ? '\u2014' : `${densityAlt.toLocaleString()} ft`;
@@ -877,7 +939,7 @@
       el.pressureValue.textContent = pressure == null ? '\u2014' : `${pressure} inHg`;
       el.dirLabel.textContent = weather ? formatDir(windDir) : (state.weatherError ? 'Data unavailable' : 'Waiting for data\u2026');
       el.windArrow.style.transform = `rotate(${windDir ?? 0}deg)`;
-      el.updatedAgo.textContent = timeSince(weather?.received_at || state.lastWeatherFetch);
+      updateStaleness();
     }
 
     function renderChart() {
@@ -1071,8 +1133,8 @@
     }
 
     function startUpdatedTicker() {
-      renderWeather();
-      setInterval(() => renderWeather(), 1000);
+      updateStaleness();
+      setInterval(updateStaleness, 1000);
     }
 
     async function init() {
