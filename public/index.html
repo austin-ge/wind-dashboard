@@ -645,22 +645,14 @@
                 </div>
               </div>
               <div class="spot-row hidden" id="spotRow">
-                <div class="spot-label">Out Spot</div>
+                <div class="spot-label">Spot</div>
                 <div class="meta-chip">
                   Heading
                   <strong id="spotHeading">&mdash;</strong>
                 </div>
                 <div class="meta-chip">
-                  Offset
-                  <strong id="spotOffset">&mdash;</strong>
-                </div>
-                <div class="meta-chip">
-                  Ground Spd
-                  <strong id="spotGroundSpeed">&mdash;</strong>
-                </div>
-                <div class="meta-chip">
-                  Separation
-                  <strong id="spotSeparation">&mdash;</strong>
+                  Run
+                  <strong id="spotRun">&mdash;</strong>
                 </div>
               </div>
               <div class="last-window" id="lastWindow"></div>
@@ -739,9 +731,7 @@
       lastWindow: document.getElementById('lastWindow'),
       spotRow: document.getElementById('spotRow'),
       spotHeading: document.getElementById('spotHeading'),
-      spotOffset: document.getElementById('spotOffset'),
-      spotGroundSpeed: document.getElementById('spotGroundSpeed'),
-      spotSeparation: document.getElementById('spotSeparation'),
+      spotRun: document.getElementById('spotRun'),
     };
 
     const fmtInt = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value)) : null;
@@ -838,10 +828,24 @@
       }
       el.spotRow.classList.remove('hidden');
       const heading = spot.headingDeg;
-      el.spotHeading.textContent = heading != null ? `${cardinal(heading)} ${Math.round(heading)}\u00B0` : '\u2014';
-      el.spotOffset.textContent = spot.offsetMiles != null ? `${spot.offsetMiles.toFixed(2)} mi` : '\u2014';
-      el.spotGroundSpeed.textContent = spot.groundSpeedKts != null ? `${Math.round(spot.groundSpeedKts)} kts` : '\u2014';
-      el.spotSeparation.textContent = spot.separationSeconds != null ? `${spot.separationSeconds}s` : '\u2014';
+      const offset = spot.offsetMiles;
+      if (heading != null && offset != null) {
+        const sign = offset >= 0 ? '+' : '';
+        el.spotHeading.textContent = `${Math.round(heading)}\u00B0@${sign}${offset.toFixed(2)}`;
+      } else if (heading != null) {
+        el.spotHeading.textContent = `${Math.round(heading)}\u00B0`;
+      } else {
+        el.spotHeading.textContent = '\u2014';
+      }
+      const gs = spot.groundSpeedKts;
+      const sep = spot.separationSeconds;
+      if (gs != null && sep != null) {
+        el.spotRun.textContent = `${Math.round(gs)} kts / ${sep}s`;
+      } else if (gs != null) {
+        el.spotRun.textContent = `${Math.round(gs)} kts`;
+      } else {
+        el.spotRun.textContent = '\u2014';
+      }
     }
 
     function renderWeather() {
