@@ -5,10 +5,7 @@ const path = require('path');
 const Database = require('better-sqlite3');
 
 const DB_PATH = process.env.DB_PATH || '/data/weather.db';
-// TEMP FAILOVER (2026-08-29): pi3 (100.118.177.49) is off the tailnet — expired
-// Tailscale key. Polling adsbpi's console receiver instead; same API shape.
-// Revert to pi3 once it's re-authed (`sudo tailscale up` on pi3).
-const WEATHER_SOURCE = process.env.WEATHER_SOURCE || 'http://100.92.158.48:4000/api/weather';
+const WEATHER_SOURCE = process.env.WEATHER_SOURCE || 'http://100.118.177.49:4000/api/weather';
 const POLL_INTERVAL = 5000;
 const SPOT_POLL_INTERVAL = 5 * 60 * 1000; // 5 minutes (spot API caches 15 min server-side)
 const SPOT_SOURCE = process.env.SPOT_SOURCE || 'https://spotboard.xyz/api/spot/skydive-midwest';
